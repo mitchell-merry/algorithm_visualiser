@@ -11,7 +11,7 @@ const coordIsIn = (array: coordinate[], element: coordinate): boolean => {
     return array.some((coord) => coord[0] === element[0] && coord[1] === element[1]);
 }
 
-const waitTime = 20;
+const waitTime = 25;
 
 function getEmptyGrid(width: number, height: number): number[][] {
     const o: number[][] = [];
@@ -24,37 +24,54 @@ function getEmptyGrid(width: number, height: number): number[][] {
     return o;
 }
 
-type coordinate = [row: number, col: number];
+const COLOURS = ['red', 'orange', 'yellow', 'green', 'blue'] as const;
+
+type Colour = typeof COLOURS[number];
+
+type coordinate = [row: number, col: number, colour: number];
 
 export const Grid: React.FC<GridProps> = ({ width, height }) => {
     const [ cells, setCells ] = useStateWithCallbackLazy<number[][]>(getEmptyGrid(width, height));
     const nextCells = useRef<coordinate[]>([]);
+    const currCount = useRef(0);
 
     const isOob = (coord: coordinate): boolean => (coord[0] < 0 || coord[1] < 0 || coord[0] >= height || coord[1] >= width);
 
     const getNeighbours = (grid: number[][], coord: coordinate): coordinate[] => {
         const o: coordinate[] = [];
 
-        const relativeCoordsOfNeighbours: coordinate[] = [ [1, 0], [0, 1], [-1, 0], [0, -1] ];
+        const relativeCoordsOfNeighbours: coordinate[] = [ [1, 0, coord[2]], [0, 1, coord[2]], [-1, 0, coord[2]], [0, -1, coord[2]] ];
 
         for(const relativeNeighbour of relativeCoordsOfNeighbours) {
-            const n: coordinate = [coord[0]+relativeNeighbour[0], coord[1]+relativeNeighbour[1]];
+            const n: coordinate = [coord[0]+relativeNeighbour[0], coord[1]+relativeNeighbour[1], coord[2]];
             
-            if(!isOob(n) && grid[n[0]][n[1]] !== 1) o.push(n);
+            if(!isOob(n) && grid[n[0]][n[1]] < coord[2]) o.push(n);
         }
 
         return o;
     }
 
-    const renderNextFrame = async (nextCoords: coordinate[], depth: number): Promise<void> => {
-        // Actually set the new cells according to the new frame
+    const handleClick = (rowIdx: number, colIdx: number): void => {
+        currCount.current++; 
+        if(cells[rowIdx][colIdx] === currCount.current % COLOURS.length) return;
+        nextCells.current.push([rowIdx, colIdx, currCount.current]); 
+
+    }
+
+    useEffect(() => {setInterval(() => {
+        if(nextCells.current.length === 0) return;
+
+        const nextCoords: coordinate[] = [...nextCells.current];
+
+        nextCells.current = [];
+
         setCells(cells => {
             // Deep copy the 2D array
             const newCells = cells.map(row => row.slice());
 
             // Update newCells with our next coordinates
             nextCoords.forEach(coord => {
-                newCells[coord[0]][coord[1]] = 1;
+                newCells[coord[0]][coord[1]] = coord[2];
             })
 
             // Render
@@ -67,18 +84,7 @@ export const Grid: React.FC<GridProps> = ({ width, height }) => {
             })
             nextCells.current.push(...n);
         }})
-    }
-
-    const handleClick = (rowIdx: number, colIdx: number): void => {
-        nextCells.current.push([rowIdx, colIdx]);
-    }
-
-    useEffect(() => {setInterval(() => {
-        if(nextCells.current.length === 0) return;
-
-        renderNextFrame(nextCells.current, 1).then(() => {
-            nextCells.current = [];
-        });
+        
     }, waitTime);}, [])
 
 
@@ -88,7 +94,7 @@ export const Grid: React.FC<GridProps> = ({ width, height }) => {
             {cells.map((row, rowIdx) => (
                 <div className={"row"} key={rowIdx}>
                     {row.map((cellValue, colIdx) => (
-                        <div className={"cell " + (cellValue === 1 ? 'active' : '')} key={`${rowIdx} ${colIdx}`} onClick={(e) => handleClick(rowIdx, colIdx)} />
+                        <div className={"cell " + COLOURS[cellValue % COLOURS.length]} key={`${rowIdx} ${colIdx}`} onClick={(e) => handleClick(rowIdx, colIdx)} />
                     ))}
                 </div>
             ))}

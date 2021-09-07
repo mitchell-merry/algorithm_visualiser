@@ -11,8 +11,8 @@
   }
   
   .cell {
-    width: 25px;
-    height: 25px;
+    width: 30px;
+    height: 30px;
     border: 1px solid black;
   
     display: flex;
@@ -21,6 +21,15 @@
     user-select: none;
   }
 
-  .active {
+  .red {
       background-color: red;
   }
+  .orange {
+    background-color: orange;
+}.yellow {
+    background-color: yellow;
+}.green {
+    background-color: green;
+}.blue {
+    background-color: blue;
+}
