@@ -7,8 +7,8 @@ export interface GridProps {
     height: number;
 }
 
-const coordIsIn = (array: coordinate[], element: coordinate): boolean => {
-    return array.some((coord) => coord[0] === element[0] && coord[1] === element[1]);
+const coordIsIn = (array: coordinate[], element: coordinate): number => {
+    return array.findIndex((coord) => coord[0] === element[0] && coord[1] === element[1]);
 }
 
 const waitTime = 25;
@@ -80,7 +80,11 @@ export const Grid: React.FC<GridProps> = ({ width, height }) => {
             const newNeighbours = getNeighbours(currentCells, coord);
             const n: coordinate[] = [];
             newNeighbours.forEach(newNeighbour => {
-                if(!coordIsIn(nextCells.current, newNeighbour)) n.push(newNeighbour);
+                const isIn = coordIsIn(nextCells.current, newNeighbour)
+                if(isIn === -1) n.push(newNeighbour);
+                else if(nextCells.current[isIn][2] < newNeighbour[2]) {
+                    nextCells.current[isIn][2] = newNeighbour[2];
+                }
             })
             nextCells.current.push(...n);
         }})
@@ -94,7 +98,7 @@ export const Grid: React.FC<GridProps> = ({ width, height }) => {
             {cells.map((row, rowIdx) => (
                 <div className={"row"} key={rowIdx}>
                     {row.map((cellValue, colIdx) => (
-                        <div className={"cell " + COLOURS[cellValue % COLOURS.length]} key={`${rowIdx} ${colIdx}`} onClick={(e) => handleClick(rowIdx, colIdx)} />
+                        <div className={"cell " + COLOURS[cellValue % COLOURS.length]} key={`${rowIdx} ${colIdx}`} onMouseDown={(e) => handleClick(rowIdx, colIdx)} />
                     ))}
                 </div>
             ))}
