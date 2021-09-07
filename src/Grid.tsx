@@ -5,6 +5,7 @@ import { useStateWithCallbackLazy } from "use-state-with-callback";
 export interface GridProps {
     width: number;
     height: number;
+    random?: boolean;
 }
 
 const coordIsIn = (array: coordinate[], element: coordinate): number => {
@@ -13,12 +14,12 @@ const coordIsIn = (array: coordinate[], element: coordinate): number => {
 
 const waitTime = 25;
 
-function getEmptyGrid(width: number, height: number): number[][] {
+function getGrid(width: number, height: number, random: boolean): number[][] {
     const o: number[][] = [];
     for (let row = 0; row < height; row++) {
       o.push([]);
       for (let col = 0; col < width; col++) {
-        o[row].push(0);
+        o[row].push(random ? Math.floor(Math.random()*COLOURS.length) : 0);
       }
     }
     return o;
@@ -30,8 +31,8 @@ type Colour = typeof COLOURS[number];
 
 type coordinate = [row: number, col: number, colour: number];
 
-export const Grid: React.FC<GridProps> = ({ width, height }) => {
-    const [ cells, setCells ] = useStateWithCallbackLazy<number[][]>(getEmptyGrid(width, height));
+export const Grid: React.FC<GridProps> = ({ width, height, random }) => {
+    const [ cells, setCells ] = useStateWithCallbackLazy<number[][]>(getGrid(width, height, !!random));
     const nextCells = useRef<coordinate[]>([]);
     const currCount = useRef(0);
 
