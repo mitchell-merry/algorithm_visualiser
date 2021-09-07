@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import './Grid.css';
 import { useStateWithCallbackLazy } from "use-state-with-callback";
 
@@ -7,11 +7,11 @@ export interface GridProps {
     height: number;
 }
 
-const equalCoords = (one: coordinate, two: coordinate): boolean => {
-    return one[0] === two[0] && one[1] === two[1];
+const coordIsIn = (array: coordinate[], element: coordinate): boolean => {
+    return array.some((coord) => coord[0] === element[0] && coord[1] === element[1]);
 }
 
-const waitTime = 15;
+const waitTime = 20;
 
 function getEmptyGrid(width: number, height: number): number[][] {
     const o: number[][] = [];
@@ -28,6 +28,7 @@ type coordinate = [row: number, col: number];
 
 export const Grid: React.FC<GridProps> = ({ width, height }) => {
     const [ cells, setCells ] = useStateWithCallbackLazy<number[][]>(getEmptyGrid(width, height));
+    const nextCells = useRef<coordinate[]>([]);
 
     const isOob = (coord: coordinate): boolean => (coord[0] < 0 || coord[1] < 0 || coord[0] >= height || coord[1] >= width);
 
@@ -45,11 +46,7 @@ export const Grid: React.FC<GridProps> = ({ width, height }) => {
         return o;
     }
 
-    const renderNextFrame = (nextCoords: coordinate[], depth: number): void => {
-        // if(depth <= 0) return;
-        // Base case - if there are no new coordinates to update, then our chain ends here.
-        if(nextCoords.length === 0) return;
-
+    const renderNextFrame = async (nextCoords: coordinate[], depth: number): Promise<void> => {
         // Actually set the new cells according to the new frame
         setCells(cells => {
             // Deep copy the 2D array
@@ -62,27 +59,28 @@ export const Grid: React.FC<GridProps> = ({ width, height }) => {
 
             // Render
             return newCells;
-        }, (currentCells: number[][]) => {setTimeout(() => {
-            // Calculate next frame
-            const nextNextCoords: coordinate[] = [];
-
-            for(const coord of nextCoords) {
-                const newNeighbours = getNeighbours(currentCells, coord);
-                newNeighbours.forEach(newNeighbour => {
-                    if(!nextNextCoords.some((coord) => equalCoords(coord, newNeighbour)))
-                    {
-                        nextNextCoords.push(newNeighbour);
-                    }
-                })
-            }
-
-            renderNextFrame(nextNextCoords, depth-1);
-        }, waitTime)})
+        }, (currentCells: number[][]) => {for(const coord of nextCoords) {
+            const newNeighbours = getNeighbours(currentCells, coord);
+            const n: coordinate[] = [];
+            newNeighbours.forEach(newNeighbour => {
+                if(!coordIsIn(nextCells.current, newNeighbour)) n.push(newNeighbour);
+            })
+            nextCells.current.push(...n);
+        }})
     }
 
     const handleClick = (rowIdx: number, colIdx: number): void => {
-        renderNextFrame([[rowIdx, colIdx]], 2);
+        nextCells.current.push([rowIdx, colIdx]);
     }
+
+    useEffect(() => {setInterval(() => {
+        if(nextCells.current.length === 0) return;
+
+        renderNextFrame(nextCells.current, 1).then(() => {
+            nextCells.current = [];
+        });
+    }, waitTime);}, [])
+
 
     if (!cells) return <div>Loading...</div>;
     return (
