@@ -1,0 +1,25 @@
+  #grid {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .row {
+    display: flex;
+    flex-grow: 1;
+    flex-shrink: 0;
+    flex-direction: row;
+  }
+  
+  .cell {
+    width: 25px;
+    height: 25px;
+    border: 1px solid black;
+  
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .active {
+      background-color: red;
+  }
