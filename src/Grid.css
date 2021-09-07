@@ -21,15 +21,22 @@
     user-select: none;
   }
 
-  .red {
-      background-color: red;
-  }
-  .orange {
+.red {
+    background-color: red;
+}
+
+.orange {
     background-color: orange;
-}.yellow {
+}
+
+.yellow {
     background-color: yellow;
-}.green {
+}
+
+.green {
     background-color: green;
-}.blue {
+}
+
+.blue {
     background-color: blue;
 }

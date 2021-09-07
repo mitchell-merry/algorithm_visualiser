@@ -27,7 +27,7 @@ export class App extends React.Component<AppProps, IAppState> {
 
     return (
       <div className="App">
-          <Grid width={59} height={29}/>
+          <Grid width={30 } height={20}/>
       </div>
     );
   }
